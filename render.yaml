@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: patient-api
+    env: docker
+    rootDir: backend
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: APP_NAME
+        value: Patient Side API
+      - key: DATABASE_URL
+        sync: false
+      - key: SECRET_PEPPER
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: DEV_MASTER_OTP
+        value: ""
