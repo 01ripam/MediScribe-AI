@@ -1,12 +1,10 @@
 import shutil
-from datetime import date
+from datetime import date, datetime, time
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile
 
-from ..database import get_db
-from ..models import MedicalRecord, Patient
+from ..database import get_database, next_sequence
 from ..schemas import RecordOut
 
 router = APIRouter(tags=["Records"])
@@ -15,13 +13,21 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 
 @router.get("/records", response_model=list[RecordOut])
-def list_records(patient_id: int = Query(...), db: Session = Depends(get_db)):
-    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+def list_records(patient_id: int = Query(...)):
+    db = get_database()
+    patient = db.patients.find_one({"id": patient_id})
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
 
-    rows = db.query(MedicalRecord).filter(MedicalRecord.patient_id == patient_id).order_by(MedicalRecord.date.desc()).all()
-    return [RecordOut.model_validate(r) for r in rows]
+    rows = list(db.medical_records.find({"patient_id": patient_id}).sort("date", -1))
+    out: list[RecordOut] = []
+    for row in rows:
+        value = row.get("date")
+        if isinstance(value, datetime):
+            row["date"] = value.date()
+        row.pop("_id", None)
+        out.append(RecordOut.model_validate(row))
+    return out
 
 
 @router.post("/records", response_model=RecordOut)
@@ -32,9 +38,9 @@ def add_record(
     doctor_notes: str = Form(...),
     record_date: str = Form(...),
     report: UploadFile | None = File(default=None),
-    db: Session = Depends(get_db),
 ):
-    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+    db = get_database()
+    patient = db.patients.find_one({"id": patient_id})
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
 
@@ -47,15 +53,16 @@ def add_record(
         prescription_url = str(destination)
 
     parsed_date = date.fromisoformat(record_date)
-    record = MedicalRecord(
-        patient_id=patient_id,
-        doctor_id=doctor_id,
-        date=parsed_date,
-        diagnosis=diagnosis,
-        prescription_url=prescription_url,
-        doctor_notes=doctor_notes,
-    )
-    db.add(record)
-    db.commit()
-    db.refresh(record)
+    record = {
+        "id": next_sequence("record_id"),
+        "patient_id": patient_id,
+        "doctor_id": doctor_id,
+        "date": datetime.combine(parsed_date, time.min),
+        "diagnosis": diagnosis,
+        "prescription_url": prescription_url,
+        "doctor_notes": doctor_notes,
+    }
+    db.medical_records.insert_one(record)
+    record["date"] = parsed_date
+    record.pop("_id", None)
     return RecordOut.model_validate(record)

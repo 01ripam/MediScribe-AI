@@ -27,7 +27,7 @@ class AppointmentController extends StateNotifier<AsyncValue<List<Appointment>>>
   Future<void> requestAppointment({required int doctorId, required String slot}) async {
     final patientId = ref.read(authControllerProvider).patient?.id;
     if (patientId == null) {
-      return;
+      throw StateError('Please login first to book an appointment');
     }
     await ref.read(appointmentServiceProvider).create(patientId: patientId, doctorId: doctorId, slot: slot);
     await refresh();

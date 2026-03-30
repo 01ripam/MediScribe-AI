@@ -40,6 +40,7 @@ class ApiClient {
   Map<String, String> _headers({bool jsonBody = false}) {
     return <String, String>{
       'Accept': 'application/json',
+      'X-API-Key': AppConstants.appApiKey,
       if (jsonBody) 'Content-Type': 'application/json',
     };
   }

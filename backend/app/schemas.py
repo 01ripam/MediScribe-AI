@@ -3,16 +3,16 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from .models import AppointmentStatus, PaymentStatus
+from .models import AppointmentStatus, PaymentStatus, PatientStatus
 
 
 class LoginRequest(BaseModel):
-    phone: str = Field(min_length=10, max_length=15)
+    phone: str = Field(pattern=r"^\d{10}$")
 
 
 class VerifyOtpRequest(BaseModel):
-    phone: str
-    otp: str = Field(min_length=4, max_length=6)
+    phone: str = Field(pattern=r"^\d{10}$")
+    otp: str = Field(pattern=r"^\d{6}$")
 
 
 class KycRequest(BaseModel):
@@ -50,7 +50,8 @@ class DoctorOut(BaseModel):
     fees: float
     rating: float
     bio: str
-    available_slots: list[str] = []
+    available_slots: list[str] = Field(default_factory=list)
+    busy_slots: list[str] = Field(default_factory=list)
 
     class Config:
         from_attributes = True
@@ -73,7 +74,9 @@ class AppointmentOut(BaseModel):
     slot: str
     status: AppointmentStatus
     payment_status: PaymentStatus
-    payment_reference: str | None
+    payment_reference: str | None = None
+    razorpay_order_id: str | None = None
+    patient_status: PatientStatus = PatientStatus.PENDING
     created_at: datetime
 
     class Config:

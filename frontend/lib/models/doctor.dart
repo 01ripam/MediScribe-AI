@@ -7,6 +7,7 @@ class Doctor {
   final double rating;
   final String bio;
   final List<String> availableSlots;
+  final List<String> busySlots;
 
   const Doctor({
     required this.id,
@@ -17,6 +18,7 @@ class Doctor {
     required this.rating,
     required this.bio,
     required this.availableSlots,
+    required this.busySlots,
   });
 
   factory Doctor.fromJson(Map<String, dynamic> json) {
@@ -29,6 +31,7 @@ class Doctor {
       rating: (json['rating'] as num).toDouble(),
       bio: json['bio'] as String,
       availableSlots: (json['available_slots'] as List<dynamic>).cast<String>(),
+      busySlots: ((json['busy_slots'] as List<dynamic>?) ?? const <dynamic>[]).cast<String>(),
     );
   }
 }

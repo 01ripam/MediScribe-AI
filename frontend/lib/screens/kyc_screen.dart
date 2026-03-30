@@ -13,15 +13,14 @@ class KycScreen extends ConsumerStatefulWidget {
 class _KycScreenState extends ConsumerState<KycScreen> {
   final _nameController = TextEditingController();
   final _ageController = TextEditingController();
-  final _genderController = TextEditingController();
   final _idController = TextEditingController();
+  String _gender = 'Male';
   String _idType = 'AADHAAR';
 
   @override
   void dispose() {
     _nameController.dispose();
     _ageController.dispose();
-    _genderController.dispose();
     _idController.dispose();
     super.dispose();
   }
@@ -43,10 +42,17 @@ class _KycScreenState extends ConsumerState<KycScreen> {
             const SizedBox(height: 12),
             TextField(controller: _ageController, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Age')),
             const SizedBox(height: 12),
-            TextField(controller: _genderController, decoration: const InputDecoration(labelText: 'Gender')),
+            DropdownButtonFormField<String>(
+              initialValue: _gender,
+              items: const <String>['Male', 'Female', 'Other']
+                  .map((String value) => DropdownMenuItem<String>(value: value, child: Text(value)))
+                  .toList(),
+              onChanged: (String? value) => setState(() => _gender = value ?? 'Male'),
+              decoration: const InputDecoration(labelText: 'Gender'),
+            ),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
-              value: _idType,
+              initialValue: _idType,
               items: const <String>['AADHAAR', 'PAN', 'VOTER_ID', 'OTHER']
                   .map((String value) => DropdownMenuItem<String>(value: value, child: Text(value)))
                   .toList(),
@@ -62,7 +68,7 @@ class _KycScreenState extends ConsumerState<KycScreen> {
                   : () => auth.completeKyc(
                         name: _nameController.text.trim(),
                         age: int.tryParse(_ageController.text.trim()) ?? 0,
-                        gender: _genderController.text.trim(),
+                        gender: _gender,
                         govtId: _idController.text.trim(),
                         govtIdType: _idType,
                       ),

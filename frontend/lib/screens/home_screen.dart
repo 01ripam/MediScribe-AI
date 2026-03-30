@@ -56,11 +56,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 separatorBuilder: (_, __) => const SizedBox(width: 8),
                 itemBuilder: (BuildContext context, int index) {
                   final category = AppConstants.specializations[index];
-                  return ActionChip(
+                  final currentFilter = ref.watch(doctorFilterProvider);
+                  final isSelected = currentFilter.specialization == category;
+                  return FilterChip(
                     label: Text(category),
-                    onPressed: () {
+                    selected: isSelected,
+                    onSelected: (bool selected) {
                       final current = ref.read(doctorFilterProvider);
-                      ref.read(doctorFilterProvider.notifier).state = DoctorFilter(query: current.query, specialization: category);
+                      final newSpecialization = selected ? category : '';
+                      ref.read(doctorFilterProvider.notifier).state = DoctorFilter(query: current.query, specialization: newSpecialization);
                     },
                   );
                 },

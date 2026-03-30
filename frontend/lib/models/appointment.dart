@@ -36,6 +36,8 @@ class Appointment {
   final AppointmentStatus status;
   final PaymentStatus paymentStatus;
   final String? paymentReference;
+  final String? razorpayOrderId;
+  final String patientStatus;
 
   const Appointment({
     required this.id,
@@ -45,6 +47,8 @@ class Appointment {
     required this.status,
     required this.paymentStatus,
     required this.paymentReference,
+    this.razorpayOrderId,
+    required this.patientStatus,
   });
 
   factory Appointment.fromJson(Map<String, dynamic> json) {
@@ -56,6 +60,8 @@ class Appointment {
       status: parseAppointmentStatus(json['status'] as String),
       paymentStatus: parsePaymentStatus(json['payment_status'] as String),
       paymentReference: json['payment_reference'] as String?,
+      razorpayOrderId: json['razorpay_order_id'] as String?,
+      patientStatus: json['patient_status'] as String? ?? 'PENDING',
     );
   }
 }

@@ -5,14 +5,17 @@ services:
     rootDir: backend
     plan: free
     autoDeploy: true
+    healthCheckPath: /docs
     envVars:
       - key: APP_NAME
         value: Patient Side API
-      - key: DATABASE_URL
+      - key: MONGODB_URI
         sync: false
-      - key: SECRET_PEPPER
+      - key: MONGO_DB_NAME
+        value: patient_platform
+      - key: APP_API_KEY
         sync: false
       - key: ALLOWED_ORIGINS
-        sync: false
-      - key: DEV_MASTER_OTP
-        value: ""
+        value: https://doctor.ashish.com,https://patient-api.onrender.com,https://*.render.com
+      - key: PORT
+        value: 8000

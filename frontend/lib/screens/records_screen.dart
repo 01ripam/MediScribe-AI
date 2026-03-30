@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../state/app_providers.dart';
 import '../state/record_controller.dart';
@@ -15,6 +16,7 @@ class _RecordsScreenState extends ConsumerState<RecordsScreen> {
   final TextEditingController _diagnosisController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
   final TextEditingController _reportPathController = TextEditingController();
+  final ImagePicker _imagePicker = ImagePicker();
 
   @override
   void initState() {
@@ -69,21 +71,56 @@ class _RecordsScreenState extends ConsumerState<RecordsScreen> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      FilledButton(
-                        onPressed: () async {
-                          await ref.read(recordControllerProvider.notifier).addRecord(
-                                diagnosis: _diagnosisController.text.trim(),
-                                doctorNotes: _notesController.text.trim(),
-                                recordDate: DateTime.now().toIso8601String().split('T').first,
-                                filePath: _reportPathController.text.trim().isEmpty
-                                    ? null
-                                    : _reportPathController.text.trim(),
-                              );
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Record uploaded')));
-                          }
-                        },
-                        child: const Text('Upload Record'),
+                      Row(
+                        children: <Widget>[
+                          Expanded(
+                            child: FilledButton(
+                              onPressed: () async {
+                                await ref.read(recordControllerProvider.notifier).addRecord(
+                                      diagnosis: _diagnosisController.text.trim(),
+                                      doctorNotes: _notesController.text.trim(),
+                                      recordDate: DateTime.now().toIso8601String().split('T').first,
+                                      filePath: _reportPathController.text.trim().isEmpty
+                                          ? null
+                                          : _reportPathController.text.trim(),
+                                    );
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Record uploaded')));
+                                }
+                              },
+                              child: const Text('Upload Record'),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          FilledButton.tonalIcon(
+                            onPressed: () async {
+                              final captured = await _imagePicker.pickImage(source: ImageSource.camera, imageQuality: 85);
+                              if (captured == null) {
+                                return;
+                              }
+
+                              final diagnosis = _diagnosisController.text.trim().isEmpty
+                                  ? 'Scanned hardcopy record'
+                                  : _diagnosisController.text.trim();
+                              final notes = _notesController.text.trim().isEmpty
+                                  ? 'Uploaded using camera scan'
+                                  : _notesController.text.trim();
+
+                              await ref.read(recordControllerProvider.notifier).addRecord(
+                                    diagnosis: diagnosis,
+                                    doctorNotes: notes,
+                                    recordDate: DateTime.now().toIso8601String().split('T').first,
+                                    filePath: captured.path,
+                                  );
+
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Scanned record uploaded')));
+                              }
+                            },
+                            icon: const Icon(Icons.camera_alt),
+                            label: const Text('Scan'),
+                          ),
+                        ],
                       ),
                     ],
                   ),
